@@ -59,7 +59,6 @@ func (w *watcher) updateDomainRecord(latestIP string, record *alidns.Record) err
 }
 
 func (w *watcher) Run() {
-	log.Printf("current ip: %s", w.recordIP)
 	latestIP, err := utils.GetOuterIp()
 	if err != nil {
 		log.Printf("get latest ip err: %s\n", err)
@@ -68,9 +67,8 @@ func (w *watcher) Run() {
 	if latestIP == w.latestIP {
 		return
 	}
-	log.Printf("latest ip: %s", latestIP)
+	log.Printf("current ip: %s, latestip:%s", w.recordIP, latestIP)
 	w.latestIP = latestIP
-
 	records, err := w.getLatestDomainRecord()
 	if err != nil {
 		log.Printf("get latest domain records err: %s\n", err)
