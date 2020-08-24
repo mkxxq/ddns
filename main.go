@@ -14,9 +14,8 @@ type watcher struct {
 	accessKeySecret string
 	domain          string
 	region          string
-
-	recordIP string
-	latestIP string
+	recordIP        string
+	latestIP        string
 }
 
 func (w *watcher) getAliClient() (*alidns.Client, error) {
