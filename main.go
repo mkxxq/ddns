@@ -12,8 +12,8 @@ import (
 type watcher struct {
 	accessKeyID     string
 	accessKeySecret string
-	domain          string
 	region          string
+	domain          string
 	recordIP        string
 	latestIP        string
 }
@@ -91,10 +91,6 @@ func (w *watcher) Run() {
 }
 
 func main() {
-	// rootDomain := "mkxxq.top"
-	// myDomain := "cloud.mkxxq.top"
-	// accessKeyID := "LTAI4Fz5ZsKn4ckuxxNDk345"
-	// accessKeySecret := "wOS1TA51uitjB6FdGwlSXjQFw5y3gu"
 	var domain string
 	flag.StringVar(&domain, "d", "www.google.com", "the domain name to be modified.")
 	var accessKeyID string
