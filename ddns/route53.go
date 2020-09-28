@@ -1,8 +1,10 @@
 package ddns
 
 import (
+	"fmt"
 	"log"
 	"net/http"
+	"strings"
 
 	"golang.org/x/net/http2"
 
@@ -50,4 +52,41 @@ func (cre *AwsCredential) newClient() error {
 	}
 	cre.client = route53.New(sess)
 	return nil
+}
+
+// host zone id like "/hostedzone/Z0693175UDCZQTRUIO8H", wo only need "Z0693175UDCZQTRUIO8H"
+func decodeHostedZoneID(id string) string {
+	return strings.Replace(id, "/hostedzone/", "", -1)
+
+}
+
+func (cre *AwsCredential) getHostedZone(domain string) (string, error) {
+	input := route53.ListHostedZonesByNameInput{
+		DNSName: aws.String(domain),
+	}
+	client := cre.client
+	output, err := client.ListHostedZonesByName(&input)
+	if err != nil {
+		return "", err
+	}
+	if !strings.HasSuffix(domain, ".") {
+		domain = domain + "."
+	}
+
+	for _, zone := range output.HostedZones {
+		if *zone.Name == domain {
+			return decodeHostedZoneID(*zone.Id), nil
+		}
+	}
+	return "", fmt.Errorf("%s, not found", domain)
+}
+
+func (cre *AwsCredential) GetRecord(subDomain string) (*Record, error) {
+
+	input := route53.ListResourceRecordSetsInput{}
+	r := new(Record)
+	client := cre.client
+
+
+	return r, nil
 }
