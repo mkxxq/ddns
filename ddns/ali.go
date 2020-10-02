@@ -25,11 +25,22 @@ func NewAliCredential(accessKeyID string, accessKeySecret string, region string)
 	return cre
 }
 
-func NewAwsCredentialWithEnv() *AliCredential {
+func NewAwsCredentialWithEnv() (*AliCredential, error) {
 	region := os.Getenv("ALI_REGION")
+	if region == "" {
+		return nil, fmt.Errorf("env value ALI_REGION not define")
+	}
 	accessKeyID := os.Getenv("ALI_ACCESS_KEY")
+
+	if accessKeyID == "" {
+		return nil, fmt.Errorf("env value ALI_ACCESS_KEY not define")
+	}
+
 	accessKeySecret := os.Getenv("ALI_SECRET_KEY")
-	return NewAliCredential(accessKeyID, accessKeySecret, region)
+	if accessKeySecret == "" {
+		return nil, fmt.Errorf("env value ALI_SECRET_KEY not define")
+	}
+	return NewAliCredential(accessKeyID, accessKeySecret, region), nil
 
 }
 
@@ -37,8 +48,7 @@ func (cli *AliCredential) newClient() (*alidns.Client, error) {
 	return alidns.NewClientWithAccessKey(cli.Region, cli.AccessKeyID, cli.AccessKeySecret)
 }
 
-func (cli *AliCredential) GetRecord(subDomain string) (*Record, error) {
-	r := new(Record)
+func (cli *AliCredential) getRecord(subDomain string) (*alidns.Record, error) {
 	client := cli.client
 	request := alidns.CreateDescribeSubDomainRecordsRequest()
 	request.Scheme = "https"
@@ -49,30 +59,42 @@ func (cli *AliCredential) GetRecord(subDomain string) (*Record, error) {
 	}
 	for _, record := range response.DomainRecords.Record {
 		if record.RR+record.DomainName == subDomain {
-			r.ID = record.RecordId
-			r.RR = record.RR
-			r.Type = record.Type
-			r.Value = record.Value
-			return r, nil
+
+			return &record, nil
 		}
 	}
 	return nil, fmt.Errorf("can`t found %s record.", subDomain)
 }
 
-func (cli *AliCredential) UpdateRecord(value string, r *Record) error {
+func (cli *AliCredential) UpsertRecord(subDomain string, ip string) error {
 	client := cli.client
 
-	request := alidns.CreateUpdateDomainRecordRequest()
-	request.Scheme = "https"
-
-	request.RecordId = r.ID
-	request.RR = r.RR
-	request.Type = r.Type
-	request.Value = value
-
-	_, err := client.UpdateDomainRecord(request)
+	record, err := cli.getRecord(subDomain)
 	if err != nil {
-		return err
+		request := alidns.CreateAddDomainRecordRequest()
+		request.Scheme = "https"
+		request.DomainName = subDomain
+		request.RR = "A"
+		request.Value = ip
+		_, err := client.AddDomainRecord(request)
+		if err != nil {
+			return err
+		}
+	} else {
+		request := alidns.CreateUpdateDomainRecordRequest()
+		request.Scheme = "https"
+
+		request.RecordId = record.RecordId
+		request.RR = record.RR
+		request.Type = record.Type
+		request.Value = ip
+
+		_, err := client.UpdateDomainRecord(request)
+		if err != nil {
+			return err
+		}
 	}
+
 	return nil
+
 }

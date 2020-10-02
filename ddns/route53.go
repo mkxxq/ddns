@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"strings"
+	"watcher/utils"
 
 	"golang.org/x/net/http2"
 
@@ -21,7 +22,7 @@ func NewAwsCredential() *AwsCredential {
 	cre := &AwsCredential{}
 	err := cre.newClient()
 	if err != nil {
-		log.Panic(err)
+		log.Panicln(err)
 	}
 	return cre
 }
@@ -81,12 +82,36 @@ func (cre *AwsCredential) getHostedZone(domain string) (string, error) {
 	return "", fmt.Errorf("%s, not found", domain)
 }
 
-func (cre *AwsCredential) GetRecord(subDomain string) (*Record, error) {
-
-	input := route53.ListResourceRecordSetsInput{}
-	r := new(Record)
-	client := cre.client
-
-
-	return r, nil
+func (cre *AwsCredential) UpsertRecord(subDomain string, ip string) error {
+	_, domain := utils.ParseSubDomain(subDomain)
+	if domain == "" {
+		return fmt.Errorf("error subDomain: %s", subDomain)
+	}
+	hostZoneID, err := cre.getHostedZone(domain)
+	if err != nil {
+		return err
+	}
+	input := &route53.ChangeResourceRecordSetsInput{
+		ChangeBatch: &route53.ChangeBatch{
+			Changes: []*route53.Change{
+				{
+					Action: aws.String("UPSERT"),
+					ResourceRecordSet: &route53.ResourceRecordSet{
+						Name: aws.String(subDomain),
+						ResourceRecords: []*route53.ResourceRecord{
+							{Value: aws.String(ip)},
+						},
+						TTL:  aws.Int64(60),
+						Type: aws.String("A"),
+					},
+				},
+			},
+		},
+		HostedZoneId: aws.String(hostZoneID),
+	}
+	_, err = cre.client.ChangeResourceRecordSets(input)
+	if err != nil {
+		return err
+	}
+	return nil
 }
