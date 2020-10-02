@@ -1,8 +1,15 @@
-# watcher
-one ddns for ali dns.
+## overview
+A ddns tool that can monitor the local export IP changes and change the dns resolution, supports aws(route53) and alidns.
+
+## dependency
+
+go
+
+## install
 
 
-## install certbot-auto
+## usage
 
-wget https://dl.eff.org/certbot-auto
-chmod a+x certbot-auto
+
+
+
