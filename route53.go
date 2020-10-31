@@ -5,13 +5,13 @@ import (
 	"log"
 	"net/http"
 	"strings"
-	"watcher/utils"
 
 	"golang.org/x/net/http2"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/route53"
+	"github.com/mkxxq/ddns/utils"
 )
 
 type AwsCredential struct {
