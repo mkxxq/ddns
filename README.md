@@ -10,6 +10,18 @@ go
 
 ## usage
 
+### docker-compose
+```
+version: "3"
+services:
+  ddns:
+    entrypoint: ./ddns -t aws -d cloud.mkxxq.top
+    image: xiaoqiang321/ddns
+    restart: always
+    environment:
+      AWS_ACCESS_KEY_ID: {your aws key}
+      AWS_SECRET_ACCESS_KEY:  {your aws secret}
+```
 
 
 
