@@ -83,7 +83,7 @@ func (cre *AwsCredential) getHostedZone(domain string) (string, error) {
 }
 
 func (cre *AwsCredential) UpsertRecord(subDomain string, ip string) error {
-	_, domain := utils.ParseSubDomain(subDomain)
+	_, domain := utils.DecodeSubDomain(subDomain)
 	if domain == "" {
 		return fmt.Errorf("error subDomain: %s", subDomain)
 	}

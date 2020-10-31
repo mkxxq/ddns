@@ -1,10 +1,11 @@
 package utils
 
 import (
+	"fmt"
 	"strings"
 )
 
-func ParseSubDomain(subDomain string) (string, string) {
+func DecodeSubDomain(subDomain string) (string, string) {
 	labels := strings.Split(subDomain, ".")
 
 	if len(labels) > 2 {
@@ -14,4 +15,8 @@ func ParseSubDomain(subDomain string) (string, string) {
 	} else {
 		return "", ""
 	}
+}
+
+func EncodeSubDomain(rr string, domain string) string {
+	return fmt.Sprintf("%s.%s", rr, domain)
 }

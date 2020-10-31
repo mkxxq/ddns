@@ -11,7 +11,7 @@ func main() {
 	var domain string
 	flag.StringVar(&domain, "d", "www.google.com", "the domain name to be modified.")
 	var ddnsType string
-	flag.StringVar(&ddnsType, "t", "aws", "your dns provider")
+	flag.StringVar(&ddnsType, "t", "aws", "your dns provider, support ali and aws.")
 
 	flag.Parse()
 
@@ -22,7 +22,7 @@ func main() {
 	if ddnsType == "aws" {
 		cre = ddns.NewAwsCredential()
 	} else {
-		cre = ddns.NewAwsCredentialEnv()
+		cre = ddns.NewAliCredentialWithEnv()
 	}
 
 	for {
