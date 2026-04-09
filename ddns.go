@@ -12,10 +12,15 @@ type DDns interface {
 type Watcher struct {
 	Domain   string
 	latestIP string
+	IPGetter utils.OuterIPGetter
 }
 
 func (w *Watcher) Run(cre DDns) {
-	currentIP, err := utils.GetOuterIp()
+	getter := w.IPGetter
+	if getter == nil {
+		getter = utils.NewJSONIPClient("", nil)
+	}
+	currentIP, err := getter.GetOuterIP()
 	if err != nil {
 		log.Printf("get current ip err: %s\n", err)
 		return

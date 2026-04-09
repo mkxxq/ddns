@@ -1,20 +1,35 @@
 package utils
 
-import "testing"
+import (
+	"io/ioutil"
+	"net/http"
+	"strings"
+	"testing"
+)
 
-func TestGetOuterIp(t *testing.T) {
-	tests := []struct {
-		name string
-	}{
-		{name: "case 1"},
+type roundTripFunc func(*http.Request) (*http.Response, error)
+
+func (fn roundTripFunc) RoundTrip(req *http.Request) (*http.Response, error) {
+	return fn(req)
+}
+
+func TestJSONIPClient_GetOuterIP(t *testing.T) {
+	client := &http.Client{
+		Transport: roundTripFunc(func(req *http.Request) (*http.Response, error) {
+			return &http.Response{
+				StatusCode: http.StatusOK,
+				Body:       ioutil.NopCloser(strings.NewReader(`{"ip":"1.2.3.4"}`)),
+				Header:     make(http.Header),
+			}, nil
+		}),
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := GetOuterIp()
-			if err != nil {
-				t.Error(err)
-			}
-			t.Log(got)
-		})
+
+	cli := NewJSONIPClient("https://jsonip.test", client)
+	got, err := cli.GetOuterIP()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got != "1.2.3.4" {
+		t.Fatalf("got %s", got)
 	}
 }
