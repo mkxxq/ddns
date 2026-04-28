@@ -20,6 +20,11 @@ func (w *Watcher) Run(cre DDns) {
 	if getter == nil {
 		getter = utils.NewJSONIPClient("", nil)
 	}
+	domainIp, err := utils.LookupDomainIP(w.Domain)
+	if err == nil && w.latestIP != domainIp {
+		log.Printf("%s ip is %s, need changed!\n", w.Domain, domainIp)
+		w.latestIP = domainIp
+	}
 	currentIP, err := getter.GetOuterIP()
 	if err != nil {
 		log.Printf("get current ip err: %s\n", err)
