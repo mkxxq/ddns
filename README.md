@@ -1,5 +1,5 @@
 ## overview
-A ddns tool that can monitor the local export IP changes and change the dns resolution, supports aws(route53) and alidns.
+A ddns tool that can monitor the local export IP changes and change the dns resolution, supports aws(route53).
 
 ## dependency
 
@@ -57,4 +57,3 @@ ROUTEROS_USER=admin
 ROUTEROS_PASS=your-password
 ROUTEROS_INTERFACE=pppoe-out1
 ```
-

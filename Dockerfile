@@ -11,4 +11,4 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY ./build/ddns-${TARGETOS}-${TARGETARCH} /app/ddns
 
 WORKDIR /app
-CMD ./ddns -t ali -d 
+CMD ./ddns -t aws -d

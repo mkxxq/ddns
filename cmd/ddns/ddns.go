@@ -14,7 +14,7 @@ func main() {
 	var domain string
 	flag.StringVar(&domain, "d", "www.google.com", "the domain name to be modified.")
 	var ddnsType string
-	flag.StringVar(&ddnsType, "t", "aws", "your dns provider, support ali and aws.")
+	flag.StringVar(&ddnsType, "t", "aws", "your dns provider, support aws.")
 	var ipProvider string
 	flag.StringVar(&ipProvider, "ip-provider", envOrDefault("DDNS_IP_PROVIDER", "jsonip"), "outer ip provider, support jsonip and routeros.")
 	var routerOSAddr string
@@ -33,10 +33,11 @@ func main() {
 		IPGetter: mustNewIPGetter(ipProvider, routerOSAddr, routerOSUser, routerOSPass, routerOSInterface),
 	}
 	var cre ddns.DDns
-	if ddnsType == "aws" {
+	switch ddnsType {
+	case "aws":
 		cre = ddns.NewAwsCredential()
-	} else {
-		cre = ddns.NewAliCredentialWithEnv()
+	default:
+		log.Panicf("unsupported dns provider: %s\n", ddnsType)
 	}
 
 	for {
