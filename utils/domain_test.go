@@ -34,6 +34,42 @@ func TestParseSubDomain(t *testing.T) {
 	}
 }
 
+func TestLookupDomainIP_Empty(t *testing.T) {
+	// 验证空域名返回错误，确保 LookupDomainIP 正确包装了 lookupDomainIP
+	_, err := LookupDomainIP(" ")
+	if err == nil {
+		t.Error("LookupDomainIP() expected error for empty domain")
+	}
+}
+
+func TestLookupDomainIPWithDNS_EmptyDomain(t *testing.T) {
+	// 验证空域名返回错误
+	_, err := LookupDomainIPWithDNS(" ", "1.1.1.1:53")
+	if err == nil {
+		t.Error("LookupDomainIPWithDNS() expected error for empty domain")
+	}
+}
+
+func TestLookupDomainIPWithDNS_EmptyDNSServer(t *testing.T) {
+	// 验证空 DNS 服务器地址时，由于无法连接应该返回错误
+	_, err := LookupDomainIPWithDNS("example.com", "")
+	if err == nil {
+		t.Error("LookupDomainIPWithDNS() expected error for empty dns server")
+	}
+}
+
+func TestLookupDomainIPWithDNS(t *testing.T) {
+	// 验证使用外部 DNS 服务器可以正常解析域名
+	ip, err := LookupDomainIPWithDNS("example.com", "1.1.1.1:53")
+	if err != nil {
+		t.Fatalf("LookupDomainIPWithDNS() unexpected error: %v", err)
+	}
+	if ip == "" {
+		t.Error("LookupDomainIPWithDNS() returned empty ip")
+	}
+	t.Logf("example.com resolved to: %s via 1.1.1.1", ip)
+}
+
 func TestLookupDomainIP(t *testing.T) {
 	tests := []struct {
 		name    string

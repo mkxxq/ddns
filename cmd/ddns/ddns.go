@@ -25,12 +25,15 @@ func main() {
 	flag.StringVar(&routerOSPass, "routeros-pass", envOrDefault("ROUTEROS_PASS", ""), "routeros password.")
 	var routerOSInterface string
 	flag.StringVar(&routerOSInterface, "routeros-interface", envOrDefault("ROUTEROS_INTERFACE", ""), "routeros interface name for export ip.")
+	var dnsServer string
+	flag.StringVar(&dnsServer, "dns-server", envOrDefault("DDNS_DNS_SERVER", "1.1.1.1:53"), "external dns server addr for domain lookup, default 1.1.1.1:53")
 
 	flag.Parse()
 
 	w := ddns.Watcher{
-		Domain:   domain,
-		IPGetter: mustNewIPGetter(ipProvider, routerOSAddr, routerOSUser, routerOSPass, routerOSInterface),
+		Domain:    domain,
+		IPGetter:  mustNewIPGetter(ipProvider, routerOSAddr, routerOSUser, routerOSPass, routerOSInterface),
+		DNSServer: dnsServer,
 	}
 	var cre ddns.DDns
 	switch ddnsType {
