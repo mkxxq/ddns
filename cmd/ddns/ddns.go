@@ -14,7 +14,7 @@ func main() {
 	var domain string
 	flag.StringVar(&domain, "d", "www.google.com", "the domain name to be modified.")
 	var ddnsType string
-	flag.StringVar(&ddnsType, "t", "aws", "your dns provider, support aws.")
+	flag.StringVar(&ddnsType, "t", "aws", "your dns provider, support aws and cloudflare.")
 	var ipProvider string
 	flag.StringVar(&ipProvider, "ip-provider", envOrDefault("DDNS_IP_PROVIDER", "jsonip"), "outer ip provider, support jsonip and routeros.")
 	var routerOSAddr string
@@ -39,6 +39,8 @@ func main() {
 	switch ddnsType {
 	case "aws":
 		cre = ddns.NewAwsCredential()
+	case "cloudflare", "cf":
+		cre = ddns.NewCloudflareCredential()
 	default:
 		log.Panicf("unsupported dns provider: %s\n", ddnsType)
 	}
