@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"strings"
+	"time"
 
 	"golang.org/x/net/http2"
 
@@ -17,6 +18,11 @@ import (
 type AwsCredential struct {
 	client *route53.Route53
 }
+
+const (
+	// awsHTTPTimeout 是 Route53 API 请求的上界。
+	awsHTTPTimeout = 15 * time.Second
+)
 
 func NewAwsCredential() *AwsCredential {
 	cre := &AwsCredential{}
@@ -35,7 +41,7 @@ func NewAwsCredentialEnv() *AwsCredential {
 func newHTTPClient() *http.Client {
 	tr := &http.Transport{}
 	_ = http2.ConfigureTransport(tr)
-	return &http.Client{Transport: tr}
+	return &http.Client{Transport: tr, Timeout: awsHTTPTimeout}
 }
 
 func newAwsSession() (*session.Session, error) {

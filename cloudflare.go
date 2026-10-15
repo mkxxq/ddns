@@ -11,11 +11,14 @@ import (
 	"net/url"
 	"os"
 	"strings"
+	"time"
 )
 
 const (
 	cloudflareAPIBaseURL = "https://api.cloudflare.com/client/v4"
 	cloudflareDefaultTTL = 60
+	// cloudflareHTTPTimeout 是单次 API 请求的上界，避免网络中断时请求无限挂起。
+	cloudflareHTTPTimeout = 15 * time.Second
 )
 
 type CloudflareCredential struct {
@@ -52,7 +55,7 @@ func NewCloudflareCredential() *CloudflareCredential {
 	cre := &CloudflareCredential{
 		token:   os.Getenv("CLOUDFLARE_API_TOKEN"),
 		zoneID:  os.Getenv("CLOUDFLARE_ZONE_ID"),
-		client:  &http.Client{},
+		client:  &http.Client{Timeout: cloudflareHTTPTimeout},
 		baseURL: cloudflareAPIBaseURL,
 	}
 	if cre.token == "" {
@@ -68,7 +71,7 @@ func newCloudflareCredential(token string, zoneID string, baseURL string) *Cloud
 	return &CloudflareCredential{
 		token:   token,
 		zoneID:  zoneID,
-		client:  &http.Client{},
+		client:  &http.Client{Timeout: cloudflareHTTPTimeout},
 		baseURL: baseURL,
 	}
 }

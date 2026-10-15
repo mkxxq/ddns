@@ -5,10 +5,13 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"time"
 )
 
 const (
 	GET_IP_URL = "https://jsonip.com"
+	// jsonIPHTTPTimeout 是单次取外网 IP 请求的上界。
+	jsonIPHTTPTimeout = 15 * time.Second
 )
 
 type OuterIPGetter interface {
@@ -29,7 +32,7 @@ func NewJSONIPClient(url string, client *http.Client) *JSONIPClient {
 		url = GET_IP_URL
 	}
 	if client == nil {
-		client = &http.Client{}
+		client = &http.Client{Timeout: jsonIPHTTPTimeout}
 	}
 	return &JSONIPClient{URL: url, Client: client}
 }

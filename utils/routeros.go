@@ -5,14 +5,20 @@ import (
 	"crypto/md5"
 	"encoding/hex"
 	"fmt"
+	"io"
 	"net"
 	"strings"
 	"time"
 )
 
 const (
-	defaultRouterOSPort    = "8728"
+	defaultRouterOSPort = "8728"
+	// defaultRouterOSTimeout 同时用作连接超时和单条命令的读写超时，
+	// 避免对端不回包时读取永久阻塞。
 	defaultRouterOSTimeout = 5 * time.Second
+	// maxRouterOSWordLength 是单个 API word 的长度上界，
+	// 防止帧错位后按错误的长度前缀分配超大内存。
+	maxRouterOSWordLength = 1 << 20
 )
 
 type RouterOSIPClient struct {
@@ -80,6 +86,15 @@ func (cli *RouterOSIPClient) GetOuterIP() (string, error) {
 		return "", err
 	}
 	defer conn.Close()
+
+	// 整条命令(登录+查询)的读写上界，防止对端 accept 后不回包导致永久阻塞。
+	timeout := cli.Timeout
+	if timeout <= 0 {
+		timeout = defaultRouterOSTimeout
+	}
+	if err := conn.SetDeadline(time.Now().Add(2 * timeout)); err != nil {
+		return "", err
+	}
 
 	api := &routerOSAPIClient{
 		conn:   conn,
@@ -256,9 +271,12 @@ func readRouterOSWord(reader *bufio.Reader) (string, error) {
 	if length == 0 {
 		return "", nil
 	}
+	if length > maxRouterOSWordLength {
+		return "", fmt.Errorf("routeros word too long: %d", length)
+	}
 	buf := make([]byte, length)
-	_, err = reader.Read(buf)
-	if err != nil {
+	// 必须读满: Reader.Read 可能短读, 会破坏后续帧边界。
+	if _, err := io.ReadFull(reader, buf); err != nil {
 		return "", err
 	}
 	return string(buf), nil
@@ -304,23 +322,20 @@ func readRouterOSLength(reader *bufio.Reader) (int, error) {
 		}
 		return int(uint16(first&^0xC0)<<8 | uint16(second)), nil
 	case first&0xE0 == 0xC0:
-		buf := make([]byte, 2)
-		_, err := reader.Read(buf)
-		if err != nil {
+		var buf [2]byte
+		if _, err := io.ReadFull(reader, buf[:]); err != nil {
 			return 0, err
 		}
 		return int(uint32(first&^0xE0)<<16 | uint32(buf[0])<<8 | uint32(buf[1])), nil
 	case first&0xF0 == 0xE0:
-		buf := make([]byte, 3)
-		_, err := reader.Read(buf)
-		if err != nil {
+		var buf [3]byte
+		if _, err := io.ReadFull(reader, buf[:]); err != nil {
 			return 0, err
 		}
 		return int(uint32(first&^0xF0)<<24 | uint32(buf[0])<<16 | uint32(buf[1])<<8 | uint32(buf[2])), nil
 	case first == 0xF0:
-		buf := make([]byte, 4)
-		_, err := reader.Read(buf)
-		if err != nil {
+		var buf [4]byte
+		if _, err := io.ReadFull(reader, buf[:]); err != nil {
 			return 0, err
 		}
 		return int(uint32(buf[0])<<24 | uint32(buf[1])<<16 | uint32(buf[2])<<8 | uint32(buf[3])), nil
