@@ -13,33 +13,6 @@ import (
 // 期间家宽换 IP 也无法落盘。
 var lookupTimeout = 5 * time.Second
 
-func DecodeSubDomain(subDomain string) (string, string) {
-	labels := strings.Split(subDomain, ".")
-
-	if len(labels) > 2 {
-		return labels[0], strings.Join(labels[1:], ".")
-	} else if len(labels) == 2 {
-		return "", subDomain
-	} else {
-		return "", ""
-	}
-}
-
-func EncodeSubDomain(rr string, domain string) string {
-	return fmt.Sprintf("%s.%s", rr, domain)
-}
-
-// LookupDomainIP 使用系统默认 DNS 查询域名的 IPv4 地址
-func LookupDomainIP(domain string) (string, error) {
-	return lookupDomainIP(domain, net.LookupIP)
-}
-
-// LookupDomainIPWithDNS 使用指定的外部 DNS 服务器查询域名的 IPv4 地址
-// dnsServer 格式为 "host:port"，如 "1.1.1.1:53"
-func LookupDomainIPWithDNS(domain, dnsServer string) (string, error) {
-	return LookupDomainIPWithDNSServers(domain, []string{dnsServer})
-}
-
 // LookupDomainIPWithDNSServers 按顺序尝试给定的外部 DNS 服务器，第一个成功的答案即返回。
 // 必须显式给服务器而不是走系统 resolver：本机的系统 DNS 指向旁路由，答案不保证权威，
 // 拿它和出口 IP 比对会得出错误的"记录已过期"结论。

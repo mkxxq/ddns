@@ -19,9 +19,9 @@ const defaultDNSServers = "1.1.1.1:53,223.5.5.5:53"
 
 func main() {
 	var domain string
-	flag.StringVar(&domain, "d", "www.google.com", "the domain name to be modified.")
+	flag.StringVar(&domain, "d", "", "the domain name to be modified (required).")
 	var ddnsType string
-	flag.StringVar(&ddnsType, "t", "aws", "your dns provider, support aws and cloudflare.")
+	flag.StringVar(&ddnsType, "t", "cloudflare", "your dns provider, only cloudflare is supported.")
 	var ipProvider string
 	flag.StringVar(&ipProvider, "ip-provider", envOrDefault("DDNS_IP_PROVIDER", "jsonip"), "outer ip provider, support jsonip and routeros.")
 	var routerOSAddr string
@@ -37,6 +37,10 @@ func main() {
 
 	flag.Parse()
 
+	if domain == "" {
+		log.Panicln("-d is required")
+	}
+
 	servers := splitDNSServers(dnsServers)
 	w := ddns.Watcher{
 		Domain:     domain,
@@ -45,8 +49,6 @@ func main() {
 	}
 	var cre ddns.DDns
 	switch ddnsType {
-	case "aws":
-		cre = ddns.NewAwsCredential()
 	case "cloudflare", "cf":
 		cre = ddns.NewCloudflareCredential()
 	default:

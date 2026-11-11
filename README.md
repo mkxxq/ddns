@@ -1,5 +1,5 @@
 ## overview
-A ddns tool that can monitor the local export IP changes and change the dns resolution, supports aws(route53) and cloudflare.
+A ddns tool that can monitor the local export IP changes and change the dns resolution. Currently only Cloudflare is supported.
 
 ## dependency
 
@@ -14,35 +14,6 @@ go
 ```
 services:
   ddns:
-    entrypoint: ./ddns -t aws -d cloud.mkxxq.top
-    image: ddn-amd64
-    restart: always
-    environment:
-      AWS_ACCESS_KEY_ID: {your aws key}
-      AWS_SECRET_ACCESS_KEY:  {your aws secret}
-```
-
-### docker-compose with routeros
-```
-services:
-  ddns:
-    entrypoint: ./ddns -t aws -d cloud.mkxxq.top
-    image: ddns-amd64
-    restart: always
-    environment:
-      AWS_ACCESS_KEY_ID: {your aws key}
-      AWS_SECRET_ACCESS_KEY: {your aws secret}
-      DDNS_IP_PROVIDER: routeros
-      ROUTEROS_ADDR: 192.168.88.1:8728
-      ROUTEROS_USER: admin
-      ROUTEROS_PASS: {your routeros password}
-      ROUTEROS_INTERFACE: pppoe-out1
-```
-
-### docker-compose with cloudflare
-```
-services:
-  ddns:
     entrypoint: ./ddns -t cloudflare -d cloud.mkxxq.top
     image: ddns-amd64
     restart: always
@@ -52,7 +23,8 @@ services:
       DDNS_DNS_SERVER: 1.1.1.1:53,223.5.5.5:53
 ```
 
-`ddns.env` holds the credentials (`CLOUDFLARE_API_TOKEN`, `ROUTEROS_*`); keep it out of version control.
+`ddns.env` holds the credentials and the WAN IP source (`CLOUDFLARE_API_TOKEN`,
+`DDNS_IP_PROVIDER`, `ROUTEROS_*`); keep it out of version control.
 
 ### cloudflare
 ```
@@ -87,7 +59,7 @@ not trigger repeated PATCHes.
 when your export ip is on RouterOS, you can use RouterOS api provider.
 
 ```
-./ddns -t aws -d cloud.mkxxq.top -ip-provider routeros
+./ddns -t cloudflare -d cloud.mkxxq.top -ip-provider routeros
 ```
 
 env:
