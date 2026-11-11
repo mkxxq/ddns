@@ -12,7 +12,6 @@ go
 
 ### docker-compose
 ```
-version: "3"
 services:
   ddns:
     entrypoint: ./ddns -t aws -d cloud.mkxxq.top
@@ -25,7 +24,6 @@ services:
 
 ### docker-compose with routeros
 ```
-version: "3"
 services:
   ddns:
     entrypoint: ./ddns -t aws -d cloud.mkxxq.top
@@ -43,16 +41,18 @@ services:
 
 ### docker-compose with cloudflare
 ```
-version: "3"
 services:
   ddns:
     entrypoint: ./ddns -t cloudflare -d cloud.mkxxq.top
     image: ddns-amd64
     restart: always
+    env_file:
+      - ddns.env
     environment:
-      CLOUDFLARE_API_TOKEN: {your cloudflare api token}
-      CLOUDFLARE_ZONE_ID: {your cloudflare zone id}
+      DDNS_DNS_SERVER: 1.1.1.1:53,223.5.5.5:53
 ```
+
+`ddns.env` holds the credentials (`CLOUDFLARE_API_TOKEN`, `ROUTEROS_*`); keep it out of version control.
 
 ### cloudflare
 ```
@@ -67,6 +67,21 @@ CLOUDFLARE_ZONE_ID=your-cloudflare-zone-id
 ```
 
 `CLOUDFLARE_ZONE_ID` is optional. When it is not set, the provider will look up the active zone from the domain.
+
+### dns servers
+The domain's current record is read with an **explicit** resolver list, never with the system resolver:
+
+```
+DDNS_DNS_SERVER=1.1.1.1:53,223.5.5.5:53   # comma separated, tried in order
+```
+
+A bare IP gets `:53` appended. Both servers failing counts as one failed lookup for the round; the update
+still proceeds and the record is only rewritten when the outer IP actually differs. Each query is bounded
+to 5s (Go's resolver would otherwise retry for ~20s).
+
+The loop retries after 5s once anything fails (router API, Cloudflare API), otherwise every 60s. After a
+successful write it keeps the written address until the record's TTL expires, so a stale cached answer does
+not trigger repeated PATCHes.
 
 ### routeros
 when your export ip is on RouterOS, you can use RouterOS api provider.
